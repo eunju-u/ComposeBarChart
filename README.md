@@ -1,11 +1,17 @@
 # BarCart
-   A Type    |       B Type        |
-:-------------------------:|:-------------------------:
- ![image](https://github.com/user-attachments/assets/af8c2ffc-bc34-4c79-b0d0-20e938959a99)  |  ![image](https://github.com/user-attachments/assets/fafaf335-9df2-4f90-b5f7-c0273bf4b22a)
+### showYAxisUnit == false
 
-   A Type - showYAxisUnit is true    |       B Type - showYAxisUnit is true        |
+   showBarValue == true    |       showBarValue == false        |
 :-------------------------:|:-------------------------:
- ![image](https://github.com/user-attachments/assets/0d2f9151-ae5e-4574-b6ae-af66c0ea2654)  |   ![image](https://github.com/user-attachments/assets/ba7ce04d-bd06-4cad-91fb-487484c05de1)
+ ![image](https://github.com/user-attachments/assets/3a5c7f81-c5ab-4792-a20e-84ddc853fce7)  |  ![image](https://github.com/user-attachments/assets/c6a22ec7-eddb-49a5-a2d8-be38a3aefb3f)
+
+
+### showYAxisUnit == true
+   showBarValue == true    |       showBarValue == false        |
+:-------------------------:|:-------------------------:
+ ![image](https://github.com/user-attachments/assets/f9279ef5-2cb1-4ced-8106-1859050db6ec)  |   ![image](https://github.com/user-attachments/assets/8e12e06c-8763-43de-a0bb-afb9f85fd550)
+
+
 
 
 
@@ -23,12 +29,11 @@
 + BarCartWidget parameters
   
       /**
-       * @param barChartType There are two types of barChart Type A and Type B.
-       * In Type A, numbers are displayed on the bars. In Type B, they are not.
        * @param gridLineSpacing sets the spacing between the horizontal lines drawn in the background of the chart.
        * @param gridLineStrokeWidth sets the thickness of the horizontal lines drawn in the background of the chart.
        * @param showYAxisUnit sets the visibility of the unit numbers on the Y-axis.
        * @param yMax sets the maximum value of the Y-axis. It is only available for Type B of the bar chart.
+       * @param showBarValue sets the visibility of the value text displayed inside each bar.
        * @param yUnit sets the unit of the Y-axis.
        * @param barWidth sets the width of the bars.
        * @param yTextStyle sets the text style for the Y-axis, including properties like text size, color, and font.
@@ -45,6 +50,7 @@
           gridLineSpacing: Dp = 30.dp,
           gridLineStrokeWidth: Dp = 1.dp,
           showYAxisUnit: Boolean = false,
+          showBarValue: Boolean = false,
           yMax: Int = 25, // Y-axis maximum (Only need B type)
           yUnit: Int = 5, // Y-axis unit
           barWidth: Dp = 20.dp,
