@@ -3,13 +3,13 @@
 
    showBarValue == true    |       showBarValue == false        |
 :-------------------------:|:-------------------------:
- ![image](https://github.com/user-attachments/assets/3a5c7f81-c5ab-4792-a20e-84ddc853fce7)  |  ![image](https://github.com/user-attachments/assets/c6a22ec7-eddb-49a5-a2d8-be38a3aefb3f)
+ ![image](https://github.com/user-attachments/assets/67aafd72-b9a4-4569-b2a6-3434f614dcb9)  |  ![image](https://github.com/user-attachments/assets/2cd2a61c-2820-4beb-8320-8797773d4b99)
 
 
 ### showYAxisUnit == true
    showBarValue == true    |       showBarValue == false        |
 :-------------------------:|:-------------------------:
- ![image](https://github.com/user-attachments/assets/f9279ef5-2cb1-4ced-8106-1859050db6ec)  |   ![image](https://github.com/user-attachments/assets/8e12e06c-8763-43de-a0bb-afb9f85fd550)
+ ![image](https://github.com/user-attachments/assets/a8f0ea61-8347-4464-ba81-a9839e2446ec)  |   ![image](https://github.com/user-attachments/assets/0aba68e5-4b8f-47c9-93a4-7345de14ed64)
 
 
 
