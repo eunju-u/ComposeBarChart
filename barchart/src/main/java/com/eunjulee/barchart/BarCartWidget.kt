@@ -1,41 +1,35 @@
 package com.eunjulee.barchart
 
-import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.*
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.times
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
 
-data class GraphItem(
-    val size: Int = 0
-)
+data class GraphItem(val size: Int)
 
-enum class BarChartType {
-    A, B
-}
 /**
- * @param barChartType There are two types of barChart Type A and Type B.
- * In Type A, numbers are displayed on the bars. In Type B, they are not.
  * @param gridLineSpacing sets the spacing between the horizontal lines drawn in the background of the chart.
  * @param gridLineStrokeWidth sets the thickness of the horizontal lines drawn in the background of the chart.
  * @param showYAxisUnit sets the visibility of the unit numbers on the Y-axis.
- * @param yMax sets the maximum value of the Y-axis. It is only available for Type B of the bar chart.
+ * @param showBarValue sets the visibility of the value text displayed inside each bar.
+ *  @param yMax sets the maximum value of the Y-axis. It is only available for Type B of the bar chart.
  * @param yUnit sets the unit of the Y-axis.
  * @param barWidth sets the width of the bars.
  * @param yTextStyle sets the text style for the Y-axis, including properties like text size, color, and font.
@@ -48,10 +42,11 @@ enum class BarChartType {
  * **/
 @Composable
 fun BarCartWidget(
-    barChartType: BarChartType = BarChartType.A,
+    modifier: Modifier = Modifier,
     gridLineSpacing: Dp = 30.dp,
     gridLineStrokeWidth: Dp = 1.dp,
     showYAxisUnit: Boolean = false,
+    showBarValue: Boolean = false,
     yMax: Int = 25, // Y-axis maximum (Only need B type)
     yUnit: Int = 5, // Y-axis unit
     barWidth: Dp = 20.dp,
@@ -61,236 +56,234 @@ fun BarCartWidget(
     shape: RoundedCornerShape = RoundedCornerShape(0.dp),
     list: List<GraphItem>,
 ) {
-    val configuration = LocalConfiguration.current
-    val screenWidth = configuration.screenWidthDp.dp
+    val chartHeight = gridLineSpacing * (yMax / yUnit)
 
-    Box(
-        Modifier
-            .fillMaxWidth()
-            .fillMaxHeight()
-    ) {
-        /** Dashed line **/
-        Box(Modifier.align(Alignment.BottomEnd)) {
-            Column(
-                horizontalAlignment = Alignment.Start, verticalArrangement = Arrangement.Bottom
-            ) {
-                val pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 2f), 0f)
-                val drawLineColor = Color(0x1A000000)
-                val range = yMax / yUnit
-                var tempCount = yMax
-                for (i in 0 until range) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(gridLineSpacing), verticalArrangement = Arrangement.Bottom
-                    ) {
-                        if (showYAxisUnit) {
-                            Text(
-                                text = tempCount.toString(),
-                                style = yTextStyle,
-                                textAlign = TextAlign.End,
-                            )
-                            tempCount -= yUnit
-                        }
+    val density = LocalDensity.current
 
-                        Canvas(
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            drawLine(
-                                color = drawLineColor,
-                                start = Offset(0f, 0f),
-                                end = Offset(size.width, 0f),
-                                pathEffect = pathEffect,
-                                strokeWidth = gridLineStrokeWidth.toPx()
-                            )
-                        }
-                    }
-                }
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(gridLineSpacing), verticalArrangement = Arrangement.Bottom
-                ) {
-                    if (showYAxisUnit) {
-                        Text(
-                            modifier = Modifier.height(14.dp),
-                            text = "0",
-                            style = yTextStyle,
-                            textAlign = TextAlign.End,
-                        )
-                    }
-                    // Solid line
-                    HorizontalDivider(thickness = gridLineStrokeWidth, color = Color(0x33000000))
-                }
-                Spacer(modifier = Modifier.height(gridLineSpacing))
+    // Calculate the width of the Y-axis text area
+    val yAxisWidthDp = if (showYAxisUnit) {
+        with(density) {
+            val maxText = yMax.toString()
+            val paint = android.graphics.Paint().apply {
+                textSize = yTextStyle.fontSize.toPx()
             }
+            paint.measureText(maxText).toDp() + 8.dp
+        }
+    } else 0.dp
+
+    Layout(
+        modifier = modifier.height(chartHeight),
+        content = {
+
+            GridLayer(
+                yMax = yMax,
+                yUnit = yUnit,
+                gridLineSpacing = gridLineSpacing,
+                gridLineStrokeWidth = gridLineStrokeWidth,
+                showYAxisUnit = showYAxisUnit,
+                yTextStyle = yTextStyle
+            )
+
+            BarsLayer(
+                list = list,
+                barWidth = barWidth,
+                yUnit = yUnit,
+                gridLineSpacing = gridLineSpacing,
+                color = color,
+                shape = shape,
+                barTextStyle = barTextStyle,
+                startPadding = yAxisWidthDp,
+                showBarValue = showBarValue
+            )
+        }
+    ) { measurables, constraints ->
+
+        val placeables = measurables.map {
+            it.measure(constraints)
         }
 
-        /**
-         * graph
-         */
-        val graphScreenWidth = screenWidth - 120.dp
-        val graphAllWidth =
-            if (showYAxisUnit) Modifier.width(graphScreenWidth) else Modifier.fillMaxWidth()
-        val graphHeight = Modifier.fillMaxHeight()
-        val graphPadding = PaddingValues(start = 5.dp, end = 5.dp)
-
-        Column(
-            Modifier
-                .then(graphAllWidth)
-                .fillMaxHeight()
-                .align(if (barChartType == BarChartType.A) Alignment.BottomCenter else Alignment.BottomEnd),
-            verticalArrangement = Arrangement.Bottom
-        ) {
-            Row(
-                Modifier
-                    .then(graphAllWidth)
-                    .then(graphHeight)
-                    .padding(graphPadding),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Bottom
-            ) {
-                if (barChartType == BarChartType.A) {
-                    for (item in list) {
-                        TypeAGraph(
-                            item,
-                            yUnit,
-                            barWidth,
-                            gridLineSpacing,
-                            gridLineStrokeWidth,
-                            color,
-                            shape,
-                            barTextStyle
-                        )
-                    }
-                } else {
-                    for (item in list) {
-                        TypeBGraph(
-                            item,
-                            yUnit,
-                            barWidth,
-                            gridLineSpacing,
-                            gridLineStrokeWidth,
-                            color,
-                            shape
-                        )
-                    }
-                }
+        layout(constraints.maxWidth, constraints.maxHeight) {
+            placeables.forEach {
+                it.place(0, 0)
             }
         }
     }
 }
 
 @Composable
-private fun TypeAGraph(
-    item: GraphItem,
-    unit: Int,
-    width: Dp,
-    lineSpacing: Dp,
-    lineDp: Dp = 1.dp,
-    color: List<Color>,
-    shape: RoundedCornerShape,
-    barTextStyle: TextStyle = TextStyle(),
+private fun GridLayer(
+    yMax: Int,
+    yUnit: Int,
+    gridLineSpacing: Dp,
+    gridLineStrokeWidth: Dp,
+    showYAxisUnit: Boolean,
+    yTextStyle: TextStyle
 ) {
-    val size = item.size
-    val heightGraph = ((size / unit) * lineSpacing) + ((size % unit) * 4.5.dp)
-    Log.d("ejlee5", "heightGraph : $heightGraph")
-    Log.d("ejlee5", "heightGraph : $lineSpacing")
+    val textMeasurer = rememberTextMeasurer()
 
-    val gradient = Brush.verticalGradient(
-        colors = color,
-        startY = 0f,
-        endY = (heightGraph.value / 2) * 5
-    )
+    Canvas(Modifier.fillMaxSize()) {
 
-    Box(
-        modifier = Modifier
-            .width(width)
-            .fillMaxHeight(),
-        contentAlignment = Alignment.BottomEnd
-    ) {
-        Box {
-            Column(
-                Modifier
-                    .fillMaxSize()
-                    .padding(bottom = lineSpacing + lineDp),
-                verticalArrangement = Arrangement.Bottom,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Box(
-                    Modifier
-                        .fillMaxWidth()
-                        .height(heightGraph)
-                        .background(gradient, shape)
+        val spacingPx = gridLineSpacing.toPx()
+        val strokePx = gridLineStrokeWidth.toPx()
+        val range = yMax / yUnit
+        val dash = PathEffect.dashPathEffect(floatArrayOf(8f, 4f))
+
+        repeat(range + 1) { i ->
+            val y = size.height - i * spacingPx
+
+            // dashed lines
+            drawLine(
+                color = if (i == 0) Color(0x33000000) else Color(0x1A000000),
+                start = Offset(0f, y),
+                end = Offset(size.width, y),
+                strokeWidth = strokePx,
+                pathEffect = if (i == 0) null else dash
+            )
+
+            // Y-axis text positioned just above the dashed lines
+            if (showYAxisUnit) {
+                val label = (i * yUnit).toString()
+
+                val textLayout = textMeasurer.measure(
+                    text = label,
+                    style = yTextStyle
+                )
+
+                drawText(
+                    textLayoutResult = textLayout,
+                    topLeft = Offset(
+                        x = 4.dp.toPx(),
+                        y = y - textLayout.size.height
+                    )
                 )
             }
         }
+    }
+}
 
-        Box(Modifier.fillMaxSize()) {
-            Column(
+@Composable
+private fun BarsLayer(
+    list: List<GraphItem>,
+    barWidth: Dp,
+    yUnit: Int,
+    gridLineSpacing: Dp,
+    color: List<Color>,
+    shape: RoundedCornerShape,
+    barTextStyle: TextStyle,
+    startPadding: Dp,
+    showBarValue: Boolean
+) {
+    Layout(
+        content = {
+            list.forEach { item ->
+                BarItem(
+                    item,
+                    barWidth,
+                    yUnit,
+                    gridLineSpacing,
+                    color,
+                    shape,
+                    barTextStyle,
+                    showBarValue
+                )
+            }
+        }
+    ) { measurables, constraints ->
+
+        val startPaddingPx = startPadding.roundToPx()
+        val barWidthPx = barWidth.roundToPx()
+        val count = measurables.size
+
+        val usableWidth = constraints.maxWidth - startPaddingPx
+        val spacing = (usableWidth - barWidthPx * count) / (count + 1)
+
+        val placeables = measurables.map {
+            it.measure(Constraints.fixedWidth(barWidthPx))
+        }
+
+        val height = constraints.maxHeight
+
+        layout(constraints.maxWidth, height) {
+            var x = startPaddingPx + spacing
+            placeables.forEach { p ->
+                p.placeRelative(
+                    x = x,
+                    y = height - p.height
+                )
+                x += barWidthPx + spacing
+            }
+        }
+    }
+}
+
+@Composable
+private fun BarItem(
+    item: GraphItem,
+    width: Dp,
+    unit: Int,
+    lineSpacing: Dp,
+    color: List<Color>,
+    shape: RoundedCornerShape,
+    barTextStyle: TextStyle,
+    showBarValue: Boolean,
+) {
+    val barHeight = (item.size / unit) * lineSpacing + (item.size % unit) * 4.5.dp
+    val bottomPadding = 6.dp
+
+    Layout(
+        content = {
+            // Bar
+            Box(
                 Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(),
-                verticalArrangement = Arrangement.Bottom,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+                    .height(barHeight)
+                    .background(
+                        Brush.verticalGradient(color),
+                        shape
+                    )
+            )
+
+            if (showBarValue) {
                 Text(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = lineSpacing + 11.dp),
-                    text = size.toString(),
+                    text = item.size.toString(),
                     style = barTextStyle,
                     textAlign = TextAlign.Center
                 )
             }
         }
-    }
-}
+    ) { measurables, _ ->
 
-@Composable
-private fun TypeBGraph(
-    item: GraphItem,
-    unit: Int,
-    width: Dp,
-    lineSpacing: Dp,
-    lineDp: Dp = 1.dp,
-    color: List<Color>,
-    shape: RoundedCornerShape,
-) {
-    val size = item.size
-    val heightGraph = ((size / unit) * lineSpacing) + ((size % unit) * 4.5.dp)
-    val gradient = Brush.verticalGradient(
-        colors = color,
-        startY = 0f,
-        endY = 200f
-    )
-    Box(
-        Modifier
-            .width(width)
-            .fillMaxHeight()
-    ) {
-        Column(
-            Modifier
-                .width(width)
-                .fillMaxHeight()
-                .padding(bottom = lineSpacing + lineDp),
-            verticalArrangement = Arrangement.Bottom,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .height(heightGraph)
-                    .background(gradient, shape)
+        val bar = measurables[0].measure(
+            Constraints.fixedWidth(width.roundToPx())
+        )
+
+        val text = measurables.getOrNull(1)?.measure(
+            Constraints(
+                maxWidth = bar.width,
+                maxHeight = bar.height
+            )
+        )
+
+        val bottomPaddingPx = bottomPadding.roundToPx()
+
+        layout(bar.width, bar.height) {
+
+            // Bar background
+            bar.placeRelative(0, 0)
+
+            // Place the text inside the bar, aligned to the bottom
+            text?.placeRelative(
+                x = (bar.width - text.width) / 2,
+                y = bar.height - text.height - bottomPaddingPx
             )
         }
     }
 }
 
-@Preview
+@Preview(showBackground = true, widthDp = 360, heightDp = 220)
 @Composable
-fun PreviewStudyResultDetailGraph() {
+fun PreviewBarChart() {
     BarCartWidget(
+        showYAxisUnit = true,
         list = listOf(
             GraphItem(25),
             GraphItem(3),

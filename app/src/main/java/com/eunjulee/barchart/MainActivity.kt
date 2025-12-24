@@ -28,8 +28,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // set BarChartType
-        val barChartType = BarChartType.A
         val yMax = 100
         val yUnit = 5
 
@@ -40,7 +38,6 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(innerPadding),
-                        barChartType = barChartType,
                         yMax = yMax,
                         yUnit = yUnit
                     )
@@ -51,7 +48,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(modifier: Modifier = Modifier, barChartType: BarChartType, yMax: Int, yUnit: Int) {
+fun Greeting(modifier: Modifier = Modifier, yMax: Int, yUnit: Int) {
     LazyColumn(modifier = modifier, verticalArrangement = Arrangement.Center) {
         item {
             Column(
@@ -59,37 +56,26 @@ fun Greeting(modifier: Modifier = Modifier, barChartType: BarChartType, yMax: In
                 verticalArrangement = Arrangement.Bottom,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                if (barChartType == BarChartType.A) {
-                    BarCartWidget(
-                        list = dummyList,
-                        gridLineSpacing = 25.dp,
-                        yMax = yMax,
-                        yUnit = yUnit,
-                        color = listOf(Purple80, Pink80),
-                        barWidth = 25.dp,
-                        shape = RoundedCornerShape(
-                            topStart = 4.dp,
-                            topEnd = 4.dp,
-                            bottomStart = 0.dp,
-                            bottomEnd = 0.dp
-                        ),
-                    )
-                } else {
-                    BarCartWidget(
-                        barChartType = barChartType,
-                        color = listOf(Purple80, Pink80),
-                        gridLineSpacing = 25.dp,
-                        yMax = yMax,
-                        yUnit = yUnit,
-                        list = dummyList,
-                        yTextStyle = TextStyle(
-                            fontSize = 8.sp,
-                            color = Gray
-                        ),
-                        showYAxisUnit = true,
-                        barWidth = 25.dp
-                    )
-                }
+                BarCartWidget(
+                    list = dummyList,
+                    gridLineSpacing = 25.dp,
+                    yMax = yMax,
+                    yUnit = yUnit,
+                    color = listOf(Purple80, Pink80),
+                    barWidth = 25.dp,
+                    showBarValue = true,
+                    showYAxisUnit = true,
+                    yTextStyle = TextStyle(
+                        fontSize = 8.sp,
+                        color = Gray
+                    ),
+                    shape = RoundedCornerShape(
+                        topStart = 4.dp,
+                        topEnd = 4.dp,
+                        bottomStart = 0.dp,
+                        bottomEnd = 0.dp
+                    ),
+                )
             }
         }
     }
@@ -99,7 +85,7 @@ fun Greeting(modifier: Modifier = Modifier, barChartType: BarChartType, yMax: In
 @Composable
 fun GreetingPreview() {
     BarChartTheme {
-        Greeting(barChartType = BarChartType.A, yMax = 30, yUnit = 6)
+        Greeting(yMax = 30, yUnit = 6)
     }
 }
 
